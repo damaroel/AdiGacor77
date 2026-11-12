@@ -26,3 +26,30 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #b59f73;
 }
+
+/* Print Styles for Official Legal Letter */
+@media print {
+  header, footer, nav, button, .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  #printable-official-letter {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .print-page-break {
+    page-break-after: always;
+  }
+}

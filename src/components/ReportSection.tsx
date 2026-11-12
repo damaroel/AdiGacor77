@@ -1,13 +1,31 @@
-import React, { useState } from 'react';
-import { ShieldAlert, Copy, Check, Download, ExternalLink, Printer, AlertCircle, FileCheck2, Info, Building2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import {
+  ShieldAlert,
+  Copy,
+  Check,
+  Download,
+  ExternalLink,
+  Printer,
+  AlertCircle,
+  FileCheck2,
+  Building2,
+  Scale,
+  RotateCcw,
+  Sparkles,
+  CheckCircle2,
+  FileText
+} from 'lucide-react';
 import { PROFILE_DATA } from '../data/profileData';
 
 interface ReportSubmission {
   id: string;
+  letterNumber: string;
   timestamp: string;
+  fullDate: string;
   category: string;
   target: string;
   bankInfo: string;
+  lossAmount: string;
   chronology: string;
   reporterName: string;
 }
@@ -18,77 +36,143 @@ export const ReportSection: React.FC = () => {
   const [bankInfo, setBankInfo] = useState('');
   const [lossAmount, setLossAmount] = useState('');
   const [chronology, setChronology] = useState('');
-  const [reporterName, setReporterName] = useState('Masyarakat Peduli Hukum (Anonim)');
+  const [reporterName, setReporterName] = useState('');
+  
   const [submittedReport, setSubmittedReport] = useState<ReportSubmission | null>(null);
   const [copied, setCopied] = useState(false);
+  const [resetNotice, setResetNotice] = useState(false);
   const [activeTab, setActiveTab] = useState<'form' | 'direktori' | 'alur'>('form');
+
+  const formRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const resetFormFields = () => {
+    setCategory('Situs Web Judi Online');
+    setTarget('');
+    setBankInfo('');
+    setLossAmount('');
+    setChronology('');
+    setReporterName('');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!target.trim() && !bankInfo.trim()) return;
 
+    const now = new Date();
+    const dateFormatted = now.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    const timeFormatted = now.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const uniqueNum = Date.now().toString().slice(-6);
+
     const newReport: ReportSubmission = {
-      id: `LAP-ADIGACOR77-${Date.now().toString().slice(-6)}`,
-      timestamp: new Date().toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }),
+      id: `LAP-AG77-${uniqueNum}`,
+      letterNumber: `0${uniqueNum.slice(0, 3)}/ADV-SIBER/AG77/XI/${now.getFullYear()}`,
+      timestamp: `${dateFormatted}, pukul ${timeFormatted} WIB`,
+      fullDate: `${dateFormatted}`,
       category,
-      target: target.trim() || 'Tidak disebutkan',
-      bankInfo: bankInfo.trim() || 'Tidak ada data rekening',
-      chronology: chronology.trim() || 'Terindikasi memuat unsur perjudian online ilegal dan promosi terlarang.',
-      reporterName: reporterName.trim() || 'Masyarakat (Anonim)'
+      target: target.trim() || 'Tidak disebutkan / Dalam penelusuran digital',
+      bankInfo: bankInfo.trim() || 'Tidak ada data rekening yang dilampirkan',
+      lossAmount: lossAmount.trim() || 'Belum ditaksir / Laporan temuan publik',
+      chronology: chronology.trim() || 'Terindikasi memuat unsur permainan judi daring ilegal, promosi manipulatif, dan penyediaan rekening penampung.',
+      reporterName: reporterName.trim() || 'Masyarakat Peduli Hukum (Identitas Dilindungi)'
     };
 
+    // Simpan hasil surat resmi
     setSubmittedReport(newReport);
+
+    // KOSONGKAN RIWAYAT KETIKAN SECARA OTOMATIS SESUAI PERMINTAAN USER
+    resetFormFields();
+
+    // Tampilkan notifikasi bahwa riwayat ketikan telah dihapus bersih
+    setResetNotice(true);
+    setTimeout(() => {
+      setResetNotice(false);
+    }, 5000);
+
+    // Geser tampilan ke dokumen surat resmi yang baru digenerate
+    setTimeout(() => {
+      if (resultRef.current) {
+        resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
   };
 
-  const getLegalDraftText = (report: ReportSubmission) => {
-    return `SURAT LAPORAN INFORMASI ADUAN SIBER & INDIKASI TINDAK PIDANA PERJUDIAN ONLINE
-Nomor Registrasi Draf : ${report.id}
-Tanggal Pelaporan    : ${report.timestamp}
-Advokasi Terpadu     : ${PROFILE_DATA.name} (${PROFILE_DATA.focus}) - ${PROFILE_DATA.bio}
+  const getFullFormalLetterPlain = (report: ReportSubmission) => {
+    return `================================================================================
+KANTOR ADVOKASI HUKUM SIBER & PEMBERANTASAN JUDI ONLINE
+TIM PEMBERANTASAN JUDOL - ADIGACOR77, S.H.
+Kanal Publik: instagram.com/oneedikcc | Sifat: Pro-Bono Masyarakat
+================================================================================
 
-KEPADA YTH:
-1. Satuan Tugas (Satgas) Pemberantasan Perjudian Daring Republik Indonesia
-2. Direktorat Tindak Pidana Siber Bareskrim Polri (patrolisiber.id)
-3. Kementerian Komunikasi dan Digital RI - Subdit Pengendalian Konten Internet (aduankonten.id)
-4. Otoritas Jasa Keuangan (OJK) - Satgas PASTI / Kontak 157
+Nomor    : ${report.letterNumber}
+Sifat    : PENTING / DOKUMEN INFORMASI HUKUM
+Lampiran : 1 (Satu) Berkas Bukti Digital
+Perihal  : Laporan Informasi Dugaan Tindak Pidana Perjudian Daring & Permohonan
+           Pemblokiran serta Pembekuan Rekening Penampung
 
-DENGAN HORMAT,
-Saya yang bertandatangan / menyampaikan informasi aduan di bawah ini:
-Nama / Inisial Pelapor : ${report.reporterName}
-Klasifikasi Aduan      : ${report.category}
+Jakarta, ${report.fullDate}
 
-DENGAN INI MENYAMPAIKAN DUGAAN TINDAK PIDANA DENGAN RINCIAN:
-1. Target / Alamat URL / Akun :
-   ${report.target}
+Kepada Yth:
+1. Ketua Satuan Tugas (Satgas) Pemberantasan Perjudian Daring Republik Indonesia
+2. Direktur Tindak Pidana Siber Bareskrim Polri (patrolisiber.id)
+3. Direktur Jenderal Pengendalian Aplikasi Informatika, Kementerian Komunikasi dan Digital RI (aduankonten.id)
+4. Ketua Satgas Pemberantasan Aktivitas Keuangan Ilegal (Satgas PASTI) / Otoritas Jasa Keuangan (OJK)
 
-2. Data Rekening Penampung / Dompet Digital (Mule Account):
-   ${report.bankInfo}
+Dengan hormat,
 
-3. Uraian Singkat Fakta & Modus Operandi:
-   ${report.chronology}
+Sehubungan dengan peran serta masyarakat dalam pencegahan dan pemberantasan tindak pidana sebagaimana dijamin dalam Pasal 108 ayat (1) dan (3) Kitab Undang-Undang Hukum Acara Pidana (KUHAP), kami yang bertandatangan di bawah ini menyampaikan laporan informasi dugaan tindak pidana dengan rincian materi sebagai berikut:
 
-DASAR HUKUM ADUAN:
-- Pasal 303 dan 303 bis KUHP jo. UU No. 7 Tahun 1974 tentang Penertiban Perjudian.
-- Pasal 27 ayat (2) jo. Pasal 45 ayat (3) UU No. 1 Tahun 2024 tentang Perubahan Kedua UU ITE (ancaman 10 tahun penjara & denda Rp10 Miliar).
-- UU No. 8 Tahun 2010 tentang Pencegahan dan Pemberantasan Tindak Pidana Pencucian Uang (TPPU) untuk dasar pemblokiran rekening terkait.
+I. IDENTITAS PELAPOR & REGISTRASI LAPORAN
+   Nomor Registrasi : ${report.id}
+   Waktu Laporan    : ${report.timestamp}
+   Penyampai Aduan  : ${report.reporterName}
+   Kategori Temuan  : ${report.category}
+   Advokasi Hukum   : AdiGacor77, S.H. (Sarjana Hukum - Adi si Pemberantas Judol)
 
-PERMOHONAN TINDAKAN TEGAS:
-1. Pemblokiran Domain, IP Address, dan akses transmisi elektronik terhadap situs/akun terlapor.
-2. Koordinasi dengan Bank Indonesia dan Bank Penyelenggara untuk pembekuan seketika (freeze) terhadap rekening bank / e-wallet penampung dana taruhan.
-3. Penyelidikan dan penyidikan lebih lanjut terhadap operator serta promotor di wilayah hukum Republik Indonesia.
+II. RINCIAN MATERI ADUAN TERLAPOR
+   1. Alamat URL / Akun / Target :
+      ${report.target}
 
-Demikian laporan pengaduan ini disampaikan dengan sebenar-benarnya demi tegaknya hukum dan perlindungan masyarakat.`;
+   2. Data Rekening Bank / E-Wallet Penampung (Mule Account):
+      ${report.bankInfo}
+
+   3. Estimasi Kerugian Finansial :
+      ${report.lossAmount}
+
+   4. Uraian Fakta & Modus Operandi :
+      ${report.chronology}
+
+III. DASAR KONSTRUKSI HUKUM POSITIF REPUBLIK INDONESIA
+   1. Pasal 303 dan 303 bis KUHP jo. UU No. 7 Tahun 1974 tentang Penertiban Perjudian.
+   2. Pasal 27 ayat (2) jo. Pasal 45 ayat (3) Undang-Undang Nomor 1 Tahun 2024 tentang Perubahan Kedua atas Undang-Undang Nomor 11 Tahun 2008 tentang Informasi dan Transaksi Elektronik (UU ITE), dengan ancaman pidana penjara paling lama 10 (sepuluh) tahun dan/atau denda paling banyak Rp10.000.000.000,00 (sepuluh miliar rupiah).
+   3. Undang-Undang Nomor 8 Tahun 2010 tentang Pencegahan dan Pemberantasan Tindak Pidana Pencucian Uang (TPPU), sebagai dasar pembekuan seketika atas aliran dana haram.
+
+IV. PETITUM / PERMOHONAN TINDAKAN PENEGAKAN HUKUM
+   Berdasarkan fakta-fakta dan dasar hukum tersebut di atas, kami memohon kepada otoritas berwenang untuk:
+   1. Melakukan pemutusan akses transmisi elektronik, pemblokiran alamat domain, dan IP address terhadap sasaran yang dilaporkan.
+   2. Berkoordinasi dengan Bank Indonesia dan pihak perbankan terkait untuk melakukan pembekuan sementara (freeze) atas rekening / e-wallet penampung yang terindikasi.
+   3. Menindaklanjuti proses penyelidikan dan penyidikan terhadap penyelenggara, operator, maupun promotor yang terlibat.
+
+Demikian laporan informasi ini kami sampaikan dengan sebenar-benarnya demi tegaknya supremasi hukum serta melindungi perekonomian masyarakat Indonesia.
+
+Hormat kami,
+Advokasi Penegakan Hukum Siber,
+
+ADIGACOR77, S.H.
+Sarjana Hukum · Adi si Pemberantas Judol
+Kanal Informasi: instagram.com/oneedikcc`;
   };
 
   const copyToClipboard = () => {
     if (!submittedReport) return;
-    const text = getLegalDraftText(submittedReport);
+    const text = getFullFormalLetterPlain(submittedReport);
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
@@ -97,14 +181,18 @@ Demikian laporan pengaduan ini disampaikan dengan sebenar-benarnya demi tegaknya
 
   const downloadTextFile = () => {
     if (!submittedReport) return;
-    const text = getLegalDraftText(submittedReport);
+    const text = getFullFormalLetterPlain(submittedReport);
     const element = document.createElement("a");
     const file = new Blob([text], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
-    element.download = `Draf_Laporan_${submittedReport.id}.txt`;
+    element.download = `Surat_Resmi_${submittedReport.id}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const officialPortals = [
@@ -149,12 +237,12 @@ Demikian laporan pengaduan ini disampaikan dengan sebenar-benarnya demi tegaknya
             Laporan Masyarakat: Berantas Situs & Rekening Judol
           </h2>
           <p className="mt-3 text-base text-[#4E4436] max-w-2xl leading-relaxed">
-            Laporkan temuan situs, promotor media sosial, atau rekening penampung judol. Sistem kami membantu menyusun <strong>draf surat aduan hukum resmi</strong> yang valid dan siap diteruskan ke otoritas berwenang.
+            Laporkan temuan situs, promotor media sosial, atau rekening penampung judol. Sistem kami menyusun <strong>surat resmi advokasi hukum lengkap dengan kop surat dan dasar hukum</strong> yang siap diteruskan ke otoritas terkait.
           </p>
         </div>
 
-        {/* Navigation Tabs between Form, Official Directory, and Legal Flow */}
-        <div className="flex items-center gap-2 mb-8 p-1.5 bg-[#EFE7D5] border border-[#DECFA9] rounded-xl max-w-lg">
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 mb-8 p-1.5 bg-[#EFE7D5] border border-[#DECFA9] rounded-xl max-w-lg no-print">
           <button
             onClick={() => setActiveTab('form')}
             className={`flex-1 py-2 px-3 text-xs font-semibold rounded-lg transition-colors cursor-pointer text-center ${
@@ -163,7 +251,7 @@ Demikian laporan pengaduan ini disampaikan dengan sebenar-benarnya demi tegaknya
                 : 'text-[#61533E] hover:text-[#1C1917]'
             }`}
           >
-            Formulir & Generator Draf
+            Formulir & Surat Resmi
           </button>
           <button
             onClick={() => setActiveTab('direktori')}
@@ -189,195 +277,561 @@ Demikian laporan pengaduan ini disampaikan dengan sebenar-benarnya demi tegaknya
 
         {/* Tab 1: Form & Draft Generator */}
         {activeTab === 'form' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="space-y-12">
             
-            {/* Input Form Column */}
-            <div className="lg:col-span-6 bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-6 sm:p-8 shadow-xs">
-              <h3 className="font-editorial text-xl font-bold text-[#1C1917] mb-2 flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-[#8C6D3B]" />
-                <span>Input Informasi Pengaduan</span>
-              </h3>
-              <p className="text-xs text-[#52493D] mb-6">
-                Privasi Anda terjaga. Formulir ini diproses sepenuhnya di browser Anda tanpa server atau database eksternal.
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
-                    Kategori Pelanggaran
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
+            {/* Top Grid: Input Form & Quick Instructions */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start no-print">
+              
+              {/* Input Form Column */}
+              <div ref={formRef} className="lg:col-span-7 bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-6 sm:p-8 shadow-xs">
+                
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-editorial text-xl font-bold text-[#1C1917] flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-[#8C6D3B]" />
+                    <span>Formulir Pengaduan Pelanggaran</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={resetFormFields}
+                    className="flex items-center gap-1.5 text-xs font-medium text-[#7A6136] hover:text-[#1C1917] p-1.5 rounded-lg hover:bg-[#EFE8D6] transition-colors cursor-pointer"
+                    title="Hapus riwayat ketikan saat ini"
                   >
-                    <option value="Situs Web Judi Online">Situs Web Judi Online (.com / gacor / slot)</option>
-                    <option value="Promosi Influencer / Medsos">Promosi Akun Medsos / Influencer / Live Streaming</option>
-                    <option value="Rekening Bank / E-Wallet Penampung">Rekening Bank / E-Wallet Penampung (Mule)</option>
-                    <option value="Spam SMS / WA Blast">Spam SMS / WhatsApp / Telegram Otomatis</option>
-                    <option value="Korban Jerat Pinjol & Pemerasan Judol">Korban Pemerasan / Teror Terkait Judol</option>
-                  </select>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Hapus Ketikan</span>
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
-                    Link URL / Akun yang Dilaporkan <span className="text-[#8C6D3B]">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={target}
-                    onChange={(e) => setTarget(e.target.value)}
-                    placeholder="Contoh: https://slot-gacor-xyz77.com atau @akun_promosi"
-                    className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
-                  />
-                </div>
+                <p className="text-xs text-[#52493D] mb-5">
+                  Isi informasi di bawah ini. Setelah Anda mengklik tombol kirim, <strong>riwayat ketikan formulir akan otomatis dibersihkan</strong> sehingga Anda dapat langsung memasukkan aduan baru tanpa perlu menghapus manual satu per satu.
+                </p>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
-                    Nomor Rekening Bank / E-Wallet Pelaku (Jika Diketahui)
-                  </label>
-                  <input
-                    type="text"
-                    value={bankInfo}
-                    onChange={(e) => setBankInfo(e.target.value)}
-                    placeholder="Contoh: Bank BCA 1234567890 a.n. Fulan / DANA 081234567xxx"
-                    className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
-                    Estimasi Kerugian Finansial (Opsional)
-                  </label>
-                  <input
-                    type="text"
-                    value={lossAmount}
-                    onChange={(e) => setLossAmount(e.target.value)}
-                    placeholder="Contoh: Rp5.000.000,- atau Tanpa Kerugian (Hanya Melaporkan Temuan)"
-                    className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
-                    Uraian Kronologi / Modus Singkat
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={chronology}
-                    onChange={(e) => setChronology(e.target.value)}
-                    placeholder="Jelaskan bagaimana situs ini beroperasi, modus pendaftaran deposit, atau cara penyebaran link..."
-                    className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B] resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
-                    Nama / Inisial Pelapor (Boleh Anonim)
-                  </label>
-                  <input
-                    type="text"
-                    value={reporterName}
-                    onChange={(e) => setReporterName(e.target.value)}
-                    placeholder="Masyarakat Peduli Hukum / Inisial Anda"
-                    className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 px-4 text-xs font-bold text-[#1C1917] bg-[#E8DCBF] hover:bg-[#DCCEAB] border border-[#C5B080] rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs mt-2"
-                >
-                  <FileCheck2 className="w-4 h-4 text-[#7A6136]" />
-                  <span>Generate Draf Laporan Hukum Resmi</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Generated Draft Preview Column */}
-            <div className="lg:col-span-6 flex flex-col">
-              {submittedReport ? (
-                <div className="bg-[#FAF7F0] border border-[#DACBA8] rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col h-full">
-                  
-                  <div className="flex items-center justify-between pb-4 border-b border-[#E8DDCA] mb-4">
-                    <div>
-                      <span className="text-xs font-mono font-bold text-[#8C6D3B]">
-                        {submittedReport.id}
-                      </span>
-                      <h4 className="font-editorial text-lg font-bold text-[#1C1917]">
-                        Draf Laporan Informasi Resmi
-                      </h4>
-                    </div>
-                    <span className="text-xs text-[#6B5E4A] font-medium">
-                      Siap Dikirim
+                {/* Reset Toast Notification */}
+                {resetNotice && (
+                  <div className="mb-5 p-3.5 bg-[#EAF2E2] border border-[#B8D7A3] text-[#2D5A1E] rounded-xl text-xs flex items-center gap-2.5 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                    <span>
+                      <strong>Surat resmi berhasil dibuat!</strong> Riwayat ketikan formulir telah otomatis dikosongkan untuk pengisian berikutnya.
                     </span>
                   </div>
+                )}
 
-                  {/* Legal Monospace Preview Frame */}
-                  <div className="flex-1 p-4 bg-[#F2EBDB] border border-[#DECFA9] rounded-xl font-mono text-[11px] text-[#241E17] whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-[380px] mb-4 selection:bg-[#DECFA9]">
-                    {getLegalDraftText(submittedReport)}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
+                      Kategori Pelanggaran
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
+                    >
+                      <option value="Situs Web Judi Online">Situs Web Judi Online (.com / slot / gacor / APK)</option>
+                      <option value="Promosi Influencer / Medsos">Promosi Akun Medsos / Influencer / Live Streaming</option>
+                      <option value="Rekening Bank / E-Wallet Penampung">Rekening Bank / E-Wallet Penampung (Mule Account)</option>
+                      <option value="Spam SMS / WA Blast">Spam SMS / WhatsApp / Telegram Otomatis</option>
+                      <option value="Korban Jerat Pinjol & Pemerasan Judol">Korban Pemerasan / Teror Terkait Judol</option>
+                    </select>
                   </div>
 
-                  {/* Actions for the report */}
-                  <div className="flex flex-wrap items-center gap-2.5 pt-2">
-                    <button
-                      onClick={copyToClipboard}
-                      className="flex-1 py-2.5 px-3 text-xs font-bold text-[#1C1917] bg-[#E8DCBF] hover:bg-[#DCCEAB] border border-[#C5B080] rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-700" />
-                          <span>Berhasil Disalin!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 text-[#7A6136]" />
-                          <span>Salin Draf Surat</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={downloadTextFile}
-                      className="py-2.5 px-3 text-xs font-medium text-[#292218] bg-[#F1EAD8] hover:bg-[#EAE0CA] border border-[#D9CCAC] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Download className="w-4 h-4 text-[#7A6136]" />
-                      <span>Unduh File (.txt)</span>
-                    </button>
-
-                    <button
-                      onClick={() => window.print()}
-                      className="py-2.5 px-3 text-xs font-medium text-[#292218] bg-[#F1EAD8] hover:bg-[#EAE0CA] border border-[#D9CCAC] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Printer className="w-4 h-4 text-[#7A6136]" />
-                      <span>Cetak Berkas</span>
-                    </button>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
+                      Link URL / Akun / Sasaran yang Dilaporkan <span className="text-[#8C6D3B]">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={target}
+                      onChange={(e) => setTarget(e.target.value)}
+                      placeholder="Contoh: https://slot-gacor-xyz77.com atau @akun_promosi"
+                      className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
+                    />
                   </div>
 
-                  <p className="mt-4 text-[11px] text-[#695C4A] leading-relaxed">
-                    💡 <em>Langkah selanjutnya: Salin draf di atas lalu tempelkan ke form aduan di portal resmi <strong>aduankonten.id</strong> atau <strong>patrolisiber.id</strong> untuk penanganan hukum langsung.</em>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
+                      Nomor Rekening Bank / E-Wallet Penampung (Jika Diketahui)
+                    </label>
+                    <input
+                      type="text"
+                      value={bankInfo}
+                      onChange={(e) => setBankInfo(e.target.value)}
+                      placeholder="Contoh: Bank BCA 1234567890 a.n. Fulan / DANA 081234567xxx"
+                      className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
+                      Estimasi Kerugian Finansial (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      value={lossAmount}
+                      onChange={(e) => setLossAmount(e.target.value)}
+                      placeholder="Contoh: Rp5.000.000,- atau Tanpa Kerugian (Laporan Temuan Publik)"
+                      className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
+                      Uraian Kronologi / Modus Singkat
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={chronology}
+                      onChange={(e) => setChronology(e.target.value)}
+                      placeholder="Jelaskan bagaimana situs ini beroperasi, modus pendaftaran deposit, atau cara penyebaran link..."
+                      className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] placeholder-[#8A7A65] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B] resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1C1917] mb-1.5">
+                      Nama / Inisial Pelapor (Boleh Dikosongkan / Anonim)
+                    </label>
+                    <input
+                      type="text"
+                      value={reporterName}
+                      onChange={(e) => setReporterName(e.target.value)}
+                      placeholder="Masyarakat Peduli Hukum / Inisial Anda (Bebas)"
+                      className="w-full px-3 py-2.5 bg-[#F4EFE2] border border-[#DACDB0] rounded-xl text-xs text-[#1C1917] focus:outline-none focus:ring-1 focus:ring-[#8C6D3B]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-3 px-4 text-xs font-bold text-[#1C1917] bg-[#E8DCBF] hover:bg-[#DCCEAB] border border-[#C5B080] rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                    >
+                      <FileCheck2 className="w-4 h-4 text-[#7A6136]" />
+                      <span>Terbitkan Surat Resmi Laporan</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={resetFormFields}
+                      className="py-3 px-4 text-xs font-medium text-[#483F33] bg-[#EFE8D6] hover:bg-[#EAE1CB] border border-[#D9CDAD] rounded-xl transition-colors cursor-pointer"
+                      title="Bersihkan seluruh kolom ketikan"
+                    >
+                      Reset Form
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Guide Column */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-6 bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl shadow-xs">
+                  <h4 className="font-editorial text-lg font-bold text-[#1C1917] mb-3 flex items-center gap-2">
+                    <Scale className="w-4 h-4 text-[#8C6D3B]" />
+                    <span>Format Surat Resmi Advokasi</span>
+                  </h4>
+                  <p className="text-xs text-[#4F4638] leading-relaxed mb-4">
+                    Surat yang dihasilkan mengadopsi standar korespondensi hukum formal di Indonesia dengan kop surat resmi tim advokasi <strong>{PROFILE_DATA.name} ({PROFILE_DATA.focus})</strong>:
                   </p>
+                  <ul className="space-y-2.5 text-xs text-[#52493D]">
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#8C6D3B] font-bold">1.</span>
+                      <span><strong>Kop Surat Resmi</strong> lengkap dengan lambang keadilan hukum dan pembatas garis ganda dinas.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#8C6D3B] font-bold">2.</span>
+                      <span><strong>Nomor, Sifat, & Perihal</strong> formal untuk mempermudah disposisi perkara di instansi negara.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#8C6D3B] font-bold">3.</span>
+                      <span><strong>Konstruksi Dasar Hukum</strong> (KUHP 303, UU ITE Pasal 27 (2), dan UU TPPU No. 8/2010).</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#8C6D3B] font-bold">4.</span>
+                      <span><strong>Petitum Tindakan Tegas</strong> (pemblokiran situs, pembekuan rekening bank, dan penyidikan).</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="p-5 bg-[#EFE8D6] border border-[#DDD0AE] rounded-2xl text-xs text-[#5C513E] leading-relaxed">
+                  <div className="font-semibold text-[#1C1917] mb-1 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#8C6D3B]" />
+                    <span>Kemudahan Pelaporan Berulang</span>
+                  </div>
+                  Setelah menekan tombol kirim, formulir Anda langsung bersih seketika sehingga Anda dapat menginput daftar rekening atau link judol berikutnya tanpa ribet menghapus karakter satu per satu.
+                </div>
+              </div>
+
+            </div>
+
+            {/* Generated Official Legal Letter Container */}
+            <div ref={resultRef} className="pt-6 border-t border-[#E5DAC0]">
+              
+              {submittedReport ? (
+                <div>
+                  
+                  {/* Top Control Bar for the Letter */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 mb-6 bg-[#FAF7F0] border border-[#DECFA9] rounded-2xl shadow-xs no-print">
+                    <div>
+                      <span className="text-xs font-mono font-bold text-[#8C6D3B] block">
+                        NOMOR BERKAS: {submittedReport.id}
+                      </span>
+                      <h4 className="font-editorial text-lg font-bold text-[#1C1917]">
+                        Surat Resmi Laporan Informasi Telah Diterbitkan
+                      </h4>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={copyToClipboard}
+                        className="py-2 px-3 text-xs font-bold text-[#1C1917] bg-[#E8DCBF] hover:bg-[#DCCEAB] border border-[#C5B080] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-700" />
+                            <span>Tersalin!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-[#7A6136]" />
+                            <span>Salin Teks Lengkap</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={downloadTextFile}
+                        className="py-2 px-3 text-xs font-medium text-[#292218] bg-[#F1EAD8] hover:bg-[#EAE0CA] border border-[#D9CCAC] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5 text-[#7A6136]" />
+                        <span>Unduh .txt</span>
+                      </button>
+
+                      <button
+                        onClick={handlePrint}
+                        className="py-2 px-3 text-xs font-bold text-[#FFFFFF] bg-[#292524] hover:bg-[#1C1917] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>Cetak Surat Resmi (PDF)</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (formRef.current) {
+                            formRef.current.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }}
+                        className="py-2 px-3 text-xs font-medium text-[#7A6136] hover:text-[#1C1917] hover:bg-[#EDE2C7] rounded-lg transition-colors cursor-pointer"
+                      >
+                        + Isi Laporan Lain
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* OFFICIAL LEGAL LETTER VISUAL PRESENTATION (A4 Formatted Sheet) */}
+                  <div
+                    id="printable-official-letter"
+                    className="max-w-4xl mx-auto bg-[#FFFFFF] border border-[#D9CCA8] p-8 sm:p-14 rounded-2xl shadow-md text-[#1C1917] leading-relaxed font-sans"
+                  >
+                    
+                    {/* KOP SURAT RESMI DINAS / ADVOKASI HUKUM */}
+                    <div className="pb-4 mb-6">
+                      <div className="flex items-center justify-between gap-6 pb-4">
+                        
+                        {/* Emblem Lambang Timbangan Keadilan */}
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#1C1917] flex items-center justify-center shrink-0 p-2 bg-[#FAF8F5]">
+                          <Scale className="w-10 h-10 text-[#1C1917]" />
+                        </div>
+
+                        {/* Teks Identitas Lembaga / Advokasi */}
+                        <div className="flex-1 text-center">
+                          <h2 className="font-editorial text-lg sm:text-2xl font-bold tracking-tight text-[#1C1917] uppercase">
+                            Kantor Advokasi Hukum Siber & Perlindungan Masyarakat
+                          </h2>
+                          <h3 className="font-editorial text-sm sm:text-lg font-bold text-[#8C6D3B] uppercase tracking-wide mt-0.5">
+                            Tim Pemberantasan Judi Online · AdiGacor77, S.H.
+                          </h3>
+                          <p className="text-[11px] sm:text-xs text-[#443E37] mt-1 font-mono">
+                            Fokus: Sarjana Hukum · Advokasi Cyber Law · Kanal Publik: instagram.com/oneedikcc
+                          </p>
+                          <p className="text-[10px] text-[#665D50] italic">
+                            Sekretariat Bantuan Hukum Pro-Bono Masyarakat · Wilayah Hukum Republik Indonesia
+                          </p>
+                        </div>
+
+                        {/* Cap Status Resmi Simetris */}
+                        <div className="hidden sm:flex flex-col items-center justify-center w-20 h-20 border border-[#8C6D3B] rounded-lg text-center p-1 bg-[#FAF7F0] text-[9px] font-mono shrink-0">
+                          <span className="font-bold text-[#8C6D3B]">RESMI</span>
+                          <span className="text-[#383023]">BERKAS</span>
+                          <span className="text-[#383023]">ADUAN</span>
+                          <span className="text-[#8C6D3B] font-bold">2026</span>
+                        </div>
+                      </div>
+
+                      {/* GARIS GANDA KOP SURAT (CIRI KHAS SURAT RESMI INDONESIA) */}
+                      <div className="border-b-4 border-[#1C1917] mb-1"></div>
+                      <div className="border-b border-[#1C1917]"></div>
+                    </div>
+
+                    {/* ATRIBUT SURAT (NOMOR, SIFAT, LAMPIRAN, PERIHAL, TANGGAL) */}
+                    <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6 text-xs sm:text-sm">
+                      <div className="space-y-1">
+                        <div className="flex">
+                          <span className="w-24 font-semibold text-[#1C1917]">Nomor</span>
+                          <span className="w-3">:</span>
+                          <span className="font-mono font-medium">{submittedReport.letterNumber}</span>
+                        </div>
+                        <div className="flex">
+                          <span className="w-24 font-semibold text-[#1C1917]">Sifat</span>
+                          <span className="w-3">:</span>
+                          <span className="font-medium text-red-700">PENTING / DOKUMEN HUKUM</span>
+                        </div>
+                        <div className="flex">
+                          <span className="w-24 font-semibold text-[#1C1917]">Lampiran</span>
+                          <span className="w-3">:</span>
+                          <span>1 (Satu) Berkas Bukti Elektronik</span>
+                        </div>
+                        <div className="flex">
+                          <span className="w-24 font-semibold text-[#1C1917]">Perihal</span>
+                          <span className="w-3">:</span>
+                          <span className="font-bold underline text-[#1C1917]">
+                            Laporan Informasi Dugaan Tindak Pidana Perjudian Daring & Permohonan Pemblokiran serta Pembekuan Rekening Bank
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-right sm:text-right text-xs sm:text-sm">
+                        <span className="font-medium">Jakarta / Indonesia, {submittedReport.fullDate}</span>
+                      </div>
+                    </div>
+
+                    {/* TUJUAN SURAT (KEPADA YTH) */}
+                    <div className="mb-6 text-xs sm:text-sm">
+                      <p className="font-semibold text-[#1C1917] mb-1">Kepada Yth:</p>
+                      <ol className="list-decimal list-inside space-y-0.5 text-[#332C24] pl-2 font-medium">
+                        <li>Ketua Satuan Tugas (Satgas) Pemberantasan Perjudian Daring Republik Indonesia</li>
+                        <li>Direktur Tindak Pidana Siber Bareskrim Kepolisian Negara Republik Indonesia</li>
+                        <li>Direktur Jenderal Pengendalian Aplikasi Informatika, Kementerian Komunikasi dan Digital RI</li>
+                        <li>Ketua Satgas Pemberantasan Aktivitas Keuangan Ilegal (Satgas PASTI) / Otoritas Jasa Keuangan (OJK)</li>
+                      </ol>
+                      <p className="mt-1 pl-2 italic text-[#554A3B]">di Tempat.</p>
+                    </div>
+
+                    {/* SALAM PEMBUKA & KALIMAT PEMBUKA */}
+                    <div className="mb-6 text-xs sm:text-sm space-y-3 text-justify">
+                      <p className="font-semibold text-[#1C1917]">Dengan hormat,</p>
+                      <p>
+                        Sehubungan dengan hak dan kewajiban setiap warga negara dalam membantu upaya pencegahan dan pemberantasan tindak pidana sebagaimana diatur dalam <strong>Pasal 108 ayat (1) dan (3) Kitab Undang-Undang Hukum Acara Pidana (KUHAP)</strong>, melalui surat resmi ini kami menyampaikan laporan informasi dugaan tindak pidana perjudian online terorganisir dengan rincian data sebagai berikut:
+                      </p>
+                    </div>
+
+                    {/* BAGIAN I: IDENTITAS & REGISTRASI LAPORAN */}
+                    <div className="mb-6 border border-[#D9CDAD] rounded-xl overflow-hidden text-xs sm:text-sm">
+                      <div className="bg-[#F8F5EE] px-4 py-2 font-bold text-[#1C1917] border-b border-[#D9CDAD] uppercase tracking-wide text-xs">
+                        I. IDENTITAS LAPORAN & PENYAMPAI ADUAN
+                      </div>
+                      <div className="p-4 space-y-2 bg-[#FFFFFF]">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
+                          <span className="font-semibold text-[#554A39]">Nomor Registrasi Sistem</span>
+                          <span className="sm:col-span-2 font-mono font-bold text-[#8C6D3B]">{submittedReport.id}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
+                          <span className="font-semibold text-[#554A39]">Waktu Pelaporan</span>
+                          <span className="sm:col-span-2">{submittedReport.timestamp}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
+                          <span className="font-semibold text-[#554A39]">Penyampai Informasi</span>
+                          <span className="sm:col-span-2 font-medium">{submittedReport.reporterName}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
+                          <span className="font-semibold text-[#554A39]">Klasifikasi Pelanggaran</span>
+                          <span className="sm:col-span-2 font-medium text-[#1C1917]">{submittedReport.category}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
+                          <span className="font-semibold text-[#554A39]">Pendamping Advokasi</span>
+                          <span className="sm:col-span-2 font-medium">{PROFILE_DATA.name} ({PROFILE_DATA.focus})</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BAGIAN II: MATERI ADUAN TERLAPOR */}
+                    <div className="mb-6 border border-[#D9CDAD] rounded-xl overflow-hidden text-xs sm:text-sm">
+                      <div className="bg-[#F8F5EE] px-4 py-2 font-bold text-[#1C1917] border-b border-[#D9CDAD] uppercase tracking-wide text-xs">
+                        II. URAIAN FAKTA & SASARAN TERLAPOR
+                      </div>
+                      <div className="p-4 space-y-3 bg-[#FFFFFF]">
+                        <div>
+                          <span className="font-semibold text-[#1C1917] block mb-1">
+                            1. Alamat Tautan (URL) / Akun / Target Sasaran:
+                          </span>
+                          <div className="p-2.5 bg-[#FAF7F0] border border-[#DECFA9] rounded-lg font-mono text-xs text-[#2A2318] break-all">
+                            {submittedReport.target}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-[#1C1917] block mb-1">
+                            2. Data Rekening Bank / E-Wallet Penampung Dana (Mule Account):
+                          </span>
+                          <div className="p-2.5 bg-[#FAF7F0] border border-[#DECFA9] rounded-lg font-mono text-xs text-[#2A2318]">
+                            {submittedReport.bankInfo}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-[#1C1917] block mb-1">
+                            3. Estimasi Nilai Kerugian Korban / Perputaran Dana:
+                          </span>
+                          <p className="text-[#3A3226]">
+                            {submittedReport.lossAmount}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-[#1C1917] block mb-1">
+                            4. Uraian Kronologi Fakta & Modus Operandi:
+                          </span>
+                          <p className="text-[#3A3226] text-justify leading-relaxed whitespace-pre-line">
+                            {submittedReport.chronology}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BAGIAN III: DASAR KONSTRUKSI HUKUM */}
+                    <div className="mb-6 border border-[#D9CDAD] rounded-xl overflow-hidden text-xs sm:text-sm">
+                      <div className="bg-[#F8F5EE] px-4 py-2 font-bold text-[#1C1917] border-b border-[#D9CDAD] uppercase tracking-wide text-xs">
+                        III. DASAR KONSTRUKSI HUKUM POSITIF REPUBLIK INDONESIA
+                      </div>
+                      <div className="p-4 space-y-2 bg-[#FFFFFF] text-justify text-xs sm:text-sm text-[#383023]">
+                        <p>
+                          <strong>1. Kitab Undang-Undang Hukum Pidana (KUHP) Pasal 303 jo. UU No. 7 Tahun 1974 tentang Penertiban Perjudian:</strong> Menjerat seluruh pihak yang mengadakan, menyediakan sarana/server, maupun memfasilitasi tindak pidana perjudian dengan ancaman pidana penjara maksimal 10 tahun.
+                        </p>
+                        <p>
+                          <strong>2. Undang-Undang Nomor 1 Tahun 2024 (Perubahan Kedua UU ITE) Pasal 27 ayat (2) jo. Pasal 45 ayat (3):</strong> Melarang pendistribusian, transmisi, atau penyediaan akses dokumen elektronik bermuatan perjudian, diancam pidana penjara paling lama 10 (sepuluh) tahun dan/atau denda paling banyak Rp10.000.000.000,00 (sepuluh miliar rupiah).
+                        </p>
+                        <p>
+                          <strong>3. Undang-Undang Nomor 8 Tahun 2010 tentang Tindak Pidana Pencucian Uang (TPPU):</strong> Memberikan landasan hukum kuat bagi otoritas terkait untuk segera melakukan pemblokiran dan penyitaan aset atas rekening-rekening penampung aliran dana hasil tindak pidana.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* BAGIAN IV: PERMOHONAN TINDAKAN PENEGAKAN HUKUM */}
+                    <div className="mb-8 border border-[#D9CDAD] rounded-xl overflow-hidden text-xs sm:text-sm">
+                      <div className="bg-[#F8F5EE] px-4 py-2 font-bold text-[#1C1917] border-b border-[#D9CDAD] uppercase tracking-wide text-xs">
+                        IV. PETITUM / PERMOHONAN TINDAKAN TEGAS
+                      </div>
+                      <div className="p-4 space-y-2 bg-[#FFFFFF] text-xs sm:text-sm">
+                        <p>Berdasarkan uraian dan bukti awal di atas, kami memohon agar:</p>
+                        <ol className="list-decimal list-inside space-y-1.5 pl-2 text-[#2D261C]">
+                          <li>
+                            <strong>Kementerian Komunikasi dan Digital RI</strong> segera melakukan pemblokiran (take down) domain, URL, dan sub-domain serta IP address terlapor.
+                          </li>
+                          <li>
+                            <strong>Otoritas Jasa Keuangan (OJK) & Bank Indonesia</strong> memerintahkan bank terkait untuk melakukan pembekuan seketika (freeze) terhadap nomor rekening / dompet digital yang digunakan sebagai penampung transaksi perjudian tersebut.
+                          </li>
+                          <li>
+                            <strong>Bareskrim Siber Polri</strong> menindaklanjuti proses penyelidikan guna mengungkap aktor sindikat, pemilik rekening perantara (rekening mule), dan promotor terkait demi kepastian hukum.
+                          </li>
+                        </ol>
+                      </div>
+                    </div>
+
+                    {/* KALIMAT PENUTUP */}
+                    <p className="text-xs sm:text-sm mb-8 text-justify">
+                      Demikian laporan informasi ini kami sampaikan dengan penuh tanggung jawab demi menegakkan hukum, membela kepentingan umum, dan membebaskan masyarakat dari lingkaran kejahatan judi daring. Atas perhatian serta tindakan cepat pihak berwenang, kami ucapkan terima kasih.
+                    </p>
+
+                    {/* LEMBAR PENGESAHAN / TANDA TANGAN RESMI */}
+                    <div className="pt-4 flex flex-col sm:flex-row justify-between items-end gap-6 text-xs sm:text-sm">
+                      
+                      {/* Catatan Verifikasi Sistem */}
+                      <div className="text-[11px] text-[#695D4A] max-w-xs font-mono">
+                        <p>Draf Digital ID: {submittedReport.id}</p>
+                        <p>Verifikasi Integritas: OK / Pro-Bono Advokasi</p>
+                        <p>Dokumen ini sah diterbitkan melalui portal advokasi adigacor77</p>
+                      </div>
+
+                      {/* Tanda Tangan & Cap Advokat */}
+                      <div className="text-center sm:text-right w-64">
+                        <p className="text-xs text-[#52493D] mb-1">Hormat kami,</p>
+                        <p className="text-xs font-semibold text-[#1C1917] mb-4">
+                          Tim Advokasi Penegakan Hukum Siber
+                        </p>
+                        
+                        {/* Stempel & Paraf Digital */}
+                        <div className="inline-flex items-center justify-center p-3 my-2 border-2 border-dashed border-[#8C6D3B] rounded-xl bg-[#FAF7F0] text-center">
+                          <div className="flex flex-col items-center">
+                            <Scale className="w-6 h-6 text-[#8C6D3B] mb-0.5" />
+                            <span className="text-[10px] font-mono font-bold text-[#8C6D3B] uppercase tracking-wider">
+                              TERVERIFIKASI RESMI
+                            </span>
+                            <span className="text-[9px] text-[#554A3B]">
+                              ADIGACOR77 · ADVOKASI SIBER
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-2">
+                          <p className="font-editorial text-base font-bold text-[#1C1917] underline decoration-1">
+                            {PROFILE_DATA.name}, S.H.
+                          </p>
+                          <p className="text-xs text-[#52493D] font-medium">
+                            {PROFILE_DATA.focus} · {PROFILE_DATA.bio}
+                          </p>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {/* Post-Print Next Step Reminder */}
+                  <div className="mt-6 p-4 bg-[#FAF7F0] border border-[#DECFA9] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-[#4E4436] no-print">
+                    <div className="flex items-center gap-2.5">
+                      <FileText className="w-5 h-5 text-[#8C6D3B] shrink-0" />
+                      <span>
+                        <strong>Langkah Selanjutnya:</strong> Salin teks surat atau unduh PDF, lalu unggah/lampirkan ke portal resmi <strong>aduankonten.id</strong> atau <strong>patrolisiber.id</strong> agar segera diproses aparat negara.
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (formRef.current) {
+                          formRef.current.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                      className="px-4 py-2 text-xs font-bold text-[#1C1917] bg-[#E8DCBF] hover:bg-[#DCCEAB] border border-[#C5B080] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      Tulis Laporan Lainnya
+                    </button>
+                  </div>
 
                 </div>
               ) : (
-                <div className="bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-8 shadow-xs flex flex-col justify-center items-center text-center h-full min-h-[380px]">
-                  <div className="w-12 h-12 rounded-xl bg-[#EFE7D4] border border-[#D9CCA8] flex items-center justify-center text-[#78613A] mb-4">
-                    <FileCheck2 className="w-6 h-6" />
+                <div className="bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-8 sm:p-12 shadow-xs flex flex-col justify-center items-center text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-[#EFE7D4] border border-[#D9CCA8] flex items-center justify-center text-[#78613A] mb-4">
+                    <FileCheck2 className="w-7 h-7" />
                   </div>
-                  <h4 className="font-editorial text-lg font-bold text-[#1C1917] mb-2">
-                    Draf Laporan Belum Dibuat
+                  <h4 className="font-editorial text-xl font-bold text-[#1C1917] mb-2">
+                    Surat Resmi Belum Diterbitkan
                   </h4>
-                  <p className="text-xs text-[#5C5140] max-w-sm leading-relaxed mb-4">
-                    Isi formulir di sebelah kiri untuk men-generate surat aduan hukum lengkap dengan rujukan pasal KUHP, UU ITE, dan UU TPPU.
+                  <p className="text-xs sm:text-sm text-[#5C5140] max-w-md leading-relaxed mb-6">
+                    Lengkapi kolom formulir di atas dan klik <strong>&quot;Terbitkan Surat Resmi Laporan&quot;</strong>. Sistem akan langsung memformat data Anda menjadi surat dinas berkekuatan hukum dengan kop surat resmi.
                   </p>
-                  <div className="p-3 bg-[#F4EFE2] border border-[#E5DAC0] rounded-xl text-[11px] text-[#6B5C47] text-left max-w-xs space-y-1">
-                    <div>✓ Format standar laporan siber Bareskrim</div>
-                    <div>✓ Nomor registrasi berkas unik</div>
-                    <div>✓ Opsi anonim & bebas biaya</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left max-w-lg w-full text-xs text-[#6B5C47]">
+                    <div className="p-3 bg-[#F4EFE2] border border-[#E5DAC0] rounded-xl">
+                      <span className="font-bold text-[#8C6D3B] block mb-0.5">Kop Surat</span>
+                      Format lembaga resmi lengkap dengan garis ganda dinas.
+                    </div>
+                    <div className="p-3 bg-[#F4EFE2] border border-[#E5DAC0] rounded-xl">
+                      <span className="font-bold text-[#8C6D3B] block mb-0.5">Dasar Hukum</span>
+                      Kompilasi pasal KUHP 303, UU ITE, dan UU TPPU.
+                    </div>
+                    <div className="p-3 bg-[#F4EFE2] border border-[#E5DAC0] rounded-xl">
+                      <span className="font-bold text-[#8C6D3B] block mb-0.5">Auto-Reset</span>
+                      Formulir otomatis bersih untuk pengisian berikutnya.
+                    </div>
                   </div>
                 </div>
               )}
+
             </div>
 
           </div>
