@@ -191,6 +191,42 @@ Kanal Informasi: instagram.com/oneedikcc`;
     document.body.removeChild(element);
   };
 
+  const downloadWordDocument = () => {
+    if (!submittedReport) return;
+    const letterElement = document.getElementById('printable-official-letter');
+    if (!letterElement) return;
+    const contentHtml = letterElement.innerHTML;
+    const fullDocument = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Surat Resmi - ${submittedReport.id}</title>
+<style>
+body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.4; color: #000; margin: 20mm; }
+.border-b-4 { border-bottom: 4px solid #000; margin-bottom: 2px; }
+.border-b { border-bottom: 1px solid #000; margin-bottom: 15px; }
+.text-center { text-align: center; }
+.font-bold { font-weight: bold; }
+.underline { text-decoration: underline; }
+table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+td, th { padding: 6px; border: 1px solid #999; font-size: 11pt; }
+</style>
+</head>
+<body>
+${contentHtml}
+</body>
+</html>`;
+    const blob = new Blob(['\ufeff', fullDocument], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Surat_Resmi_${submittedReport.id}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -223,11 +259,11 @@ Kanal Informasi: instagram.com/oneedikcc`;
   ];
 
   return (
-    <section id="laporan" className="py-20 bg-[#F8F5EE]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="laporan" className="py-20 bg-[#F8F5EE] print:py-0 print:bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 print:p-0 print:m-0 print:max-w-full">
         
         {/* Section Header */}
-        <div className="mb-12">
+        <div className="mb-12 no-print">
           <div className="flex items-center gap-2 text-xs font-semibold text-[#8C6D3B] tracking-wide mb-2">
             <span>PUSAT PENGADUAN & DOKUMEN HUKUM</span>
             <span aria-hidden="true">·</span>
@@ -462,7 +498,7 @@ Kanal Informasi: instagram.com/oneedikcc`;
             </div>
 
             {/* Generated Official Legal Letter Container */}
-            <div ref={resultRef} className="pt-6 border-t border-[#E5DAC0]">
+            <div ref={resultRef} className="pt-6 border-t border-[#E5DAC0] print:pt-0 print:border-none print:m-0">
               
               {submittedReport ? (
                 <div>
@@ -482,6 +518,7 @@ Kanal Informasi: instagram.com/oneedikcc`;
                       <button
                         onClick={copyToClipboard}
                         className="py-2 px-3 text-xs font-bold text-[#1C1917] bg-[#E8DCBF] hover:bg-[#DCCEAB] border border-[#C5B080] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                        title="Salin seluruh isi surat ke papan klip"
                       >
                         {copied ? (
                           <>
@@ -497,8 +534,18 @@ Kanal Informasi: instagram.com/oneedikcc`;
                       </button>
 
                       <button
+                        onClick={downloadWordDocument}
+                        className="py-2 px-3 text-xs font-medium text-[#292218] bg-[#F1EAD8] hover:bg-[#EAE0CA] border border-[#D9CCAC] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                        title="Unduh surat resmi berformat Word (.doc)"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-[#7A6136]" />
+                        <span>Unduh .doc</span>
+                      </button>
+
+                      <button
                         onClick={downloadTextFile}
                         className="py-2 px-3 text-xs font-medium text-[#292218] bg-[#F1EAD8] hover:bg-[#EAE0CA] border border-[#D9CCAC] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                        title="Unduh teks polos (.txt)"
                       >
                         <Download className="w-3.5 h-3.5 text-[#7A6136]" />
                         <span>Unduh .txt</span>
@@ -506,9 +553,10 @@ Kanal Informasi: instagram.com/oneedikcc`;
 
                       <button
                         onClick={handlePrint}
-                        className="py-2 px-3 text-xs font-bold text-[#FFFFFF] bg-[#292524] hover:bg-[#1C1917] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                        className="py-2 px-3.5 text-xs font-bold text-[#FFFFFF] bg-[#1C1917] hover:bg-[#2E2822] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title="Cetak khusus lembaran surat resmi atau simpan sebagai PDF"
                       >
-                        <Printer className="w-3.5 h-3.5" />
+                        <Printer className="w-3.5 h-3.5 text-[#E6D7BA]" />
                         <span>Cetak Surat Resmi (PDF)</span>
                       </button>
 
@@ -805,7 +853,7 @@ Kanal Informasi: instagram.com/oneedikcc`;
 
                 </div>
               ) : (
-                <div className="bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-8 sm:p-12 shadow-xs flex flex-col justify-center items-center text-center">
+                <div className="bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-8 sm:p-12 shadow-xs flex flex-col justify-center items-center text-center no-print">
                   <div className="w-14 h-14 rounded-2xl bg-[#EFE7D4] border border-[#D9CCA8] flex items-center justify-center text-[#78613A] mb-4">
                     <FileCheck2 className="w-7 h-7" />
                   </div>
@@ -839,7 +887,7 @@ Kanal Informasi: instagram.com/oneedikcc`;
 
         {/* Tab 2: Official Portals Directory */}
         {activeTab === 'direktori' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
             {officialPortals.map((portal) => (
               <div
                 key={portal.name}
@@ -873,7 +921,7 @@ Kanal Informasi: instagram.com/oneedikcc`;
 
         {/* Tab 3: Legal Flow & Escalation Process */}
         {activeTab === 'alur' && (
-          <div className="bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-6 sm:p-8">
+          <div className="bg-[#FAF7F0] border border-[#E3D7BB] rounded-2xl p-6 sm:p-8 no-print">
             <h4 className="font-editorial text-xl font-bold text-[#1C1917] mb-4">
               Tahapan Penindakan Laporan Berdasarkan Hukum Positif
             </h4>
